@@ -548,69 +548,70 @@ export default function BusMap({ selectedRoute, busPositions, setBusPositions, f
   };
 
   return (
+
   <div className="relative h-[600px] bg-gray-100 rounded-xl overflow-hidden">
-      {/* Leaflet Map Container */}
-      <div ref={mapContainerRef} className="w-full h-full z-0"></div>
+    {/* Leaflet Map Container */}
+    <div ref={mapContainerRef} className="w-full h-full z-0"></div>
 
-      {/* Compact Live Info - Top Left */}
-      <div className="absolute top-3 left-3 bg-white/95 backdrop-blur-sm rounded-lg shadow-lg px-3 py-2">
-        <div className="flex items-center justify-between gap-3 mb-1">
-          <div className="flex items-center gap-2">
-            <div className="w-1.5 h-1.5 bg-green-500 rounded-full animate-pulse"></div>
-            <span className="text-xs font-semibold text-gray-900">Live Tracking</span>
-          </div>
-          <span className="text-xs text-gray-500 font-mono">{currentTime.toLocaleTimeString()}</span>
+    {/* Compact Live Info - Top Left */}
+    <div className="absolute top-3 left-3 bg-white/95 backdrop-blur-sm rounded-lg shadow-lg px-3 py-2">
+      <div className="flex items-center justify-between gap-3 mb-1">
+        <div className="flex items-center gap-2">
+          <div className="w-1.5 h-1.5 bg-green-500 rounded-full animate-pulse"></div>
+          <span className="text-xs font-semibold text-gray-900">Live Tracking</span>
         </div>
-        
-        <div className="flex items-center gap-4 text-xs">
+        <span className="text-xs text-gray-500 font-mono">{currentTime.toLocaleTimeString()}</span>
+      </div>
+      <div className="flex items-center gap-4 text-xs">
+        <div className="flex items-center gap-1">
+          <span className="text-gray-600">Buses:</span>
+          <span className="font-semibold text-blue-600">{filteredBuses.length}</span>
+        </div>
+        {selectedRoute && (
           <div className="flex items-center gap-1">
-            <span className="text-gray-600">Buses:</span>
-            <span className="font-semibold text-blue-600">{filteredBuses.length}</span>
+            <span className="text-gray-600">Route:</span>
+            <span className="font-semibold text-blue-600">{filteredBuses[0]?.routeName || 'Route'}</span>
           </div>
-          {selectedRoute && (
-            <div className="flex items-center gap-1">
-              <span className="text-gray-600">Route:</span>
-              <span className="font-semibold text-blue-600">{filteredBuses[0]?.routeName || 'Route'}</span>
-            </div>
-          )}
-          <button
-            onClick={() => setSoundEnabled(!soundEnabled)}
-            className={`p-1 rounded transition-colors ${
-              soundEnabled 
-                ? 'text-green-600 hover:bg-green-50' 
-                : 'text-gray-400 hover:bg-gray-50'
-            }`}
-            title={soundEnabled ? 'Sound On' : 'Sound Off'}
-          >
-            <i className={`text-sm ${soundEnabled ? 'ri-volume-up-line' : 'ri-volume-mute-line'}`}></i>
-          </button>
-        </div>
-
-      {/* Minimal Map Controls - Top Right */}
-      <div className="absolute top-3 right-3 flex gap-2">
-        <button 
-          onClick={() => {
-            if (mapRef.current) {
-              mapRef.current.setView([15.15, 76.92], 13);
-            }
-          }}
-          className="absolute top-4 right-4 bg-white/95 backdrop-blur-sm rounded-lg shadow-lg p-2 hover:bg-gray-50 transition-colors z-20"
-          title="Reset View"
-        >
-          <i className="ri-focus-3-line text-gray-600 text-xl"></i>
-        </button>
-        {selectedBus && (
-          <button 
-            onClick={() => setSelectedBus(null)}
-            className="bg-blue-600 text-white rounded-lg shadow-lg p-2 hover:bg-blue-700 transition-colors"
-            title="Clear Selection"
-          >
-            <i className="ri-close-line text-sm"></i>
-          </button>
         )}
+        <button
+          onClick={() => setSoundEnabled(!soundEnabled)}
+          className={`p-1 rounded transition-colors ${
+            soundEnabled 
+              ? 'text-green-600 hover:bg-green-50' 
+              : 'text-gray-400 hover:bg-gray-50'
+          }`}
+          title={soundEnabled ? 'Sound On' : 'Sound Off'}
+        >
+          <i className={`text-sm ${soundEnabled ? 'ri-volume-up-line' : 'ri-volume-mute-line'}`}></i>
+        </button>
       </div>
+    </div>
 
-      </div>
+    {/* Minimal Map Controls - Top Right */}
+    <div className="absolute top-3 right-3 flex gap-2 z-20">
+      <button 
+        onClick={() => {
+          if (mapRef.current) {
+            mapRef.current.setView([15.15, 76.92], 13);
+          }
+        }}
+        className="bg-white/95 backdrop-blur-sm rounded-lg shadow-lg p-2 hover:bg-gray-50 transition-colors"
+        title="Reset View"
+      >
+        <i className="ri-focus-3-line text-gray-600 text-xl"></i>
+      </button>
+      {selectedBus && (
+        <button 
+          onClick={() => setSelectedBus(null)}
+          className="bg-blue-600 text-white rounded-lg shadow-lg p-2 hover:bg-blue-700 transition-colors"
+          title="Clear Selection"
+        >
+          <i className="ri-close-line text-sm"></i>
+        </button>
+      )}
+    </div>
+
+    {/* ...existing code... */}
 
       {/* Route Details Info Window */}
       {selectedRoute && routeDetails && showRouteInfo && (

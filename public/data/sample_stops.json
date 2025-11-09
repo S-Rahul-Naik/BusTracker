@@ -1,0 +1,86 @@
+[
+  {
+    "_id": "stop_001",
+    "name": "Central Station",
+    "code": "CS001",
+    "location": {
+      "latitude": 40.7128,
+      "longitude": -74.0060
+    },
+    "address": "123 Central Ave, Downtown",
+    "amenities": ["shelter", "bench", "digital_display", "wheelchair_access"],
+    "is_active": true,
+    "created_at": "2024-01-01T00:00:00Z",
+    "updated_at": "2024-01-01T00:00:00Z"
+  },
+  {
+    "_id": "stop_002",
+    "name": "University Campus",
+    "code": "UC002",
+    "location": {
+      "latitude": 40.7589,
+      "longitude": -73.9851
+    },
+    "address": "456 University Blvd, Campus Area",
+    "amenities": ["shelter", "bench", "digital_display"],
+    "is_active": true,
+    "created_at": "2024-01-01T00:00:00Z",
+    "updated_at": "2024-01-01T00:00:00Z"
+  },
+  {
+    "_id": "stop_003",
+    "name": "Shopping Mall",
+    "code": "SM003",
+    "location": {
+      "latitude": 40.7505,
+      "longitude": -73.9934
+    },
+    "address": "789 Mall Drive, Commercial District",
+    "amenities": ["shelter", "bench", "vending_machine"],
+    "is_active": true,
+    "created_at": "2024-01-01T00:00:00Z",
+    "updated_at": "2024-01-01T00:00:00Z"
+  },
+  {
+    "_id": "stop_004",
+    "name": "Hospital Complex",
+    "code": "HC004",
+    "location": {
+      "latitude": 40.7831,
+      "longitude": -73.9712
+    },
+    "address": "321 Health St, Medical District",
+    "amenities": ["shelter", "bench", "digital_display", "wheelchair_access", "emergency_phone"],
+    "is_active": true,
+    "created_at": "2024-01-01T00:00:00Z",
+    "updated_at": "2024-01-01T00:00:00Z"
+  },
+  {
+    "_id": "stop_005",
+    "name": "Airport Terminal",
+    "code": "AT005",
+    "location": {
+      "latitude": 40.6413,
+      "longitude": -73.7781
+    },
+    "address": "Airport Access Road, Terminal 1",
+    "amenities": ["shelter", "bench", "digital_display", "wheelchair_access", "wifi"],
+    "is_active": true,
+    "created_at": "2024-01-01T00:00:00Z",
+    "updated_at": "2024-01-01T00:00:00Z"
+  },
+  {
+    "_id": "stop_006",
+    "name": "Business District",
+    "code": "BD006",
+    "location": {
+      "latitude": 40.7614,
+      "longitude": -73.9776
+    },
+    "address": "555 Corporate Plaza, Financial District",
+    "amenities": ["shelter", "bench", "digital_display"],
+    "is_active": true,
+    "created_at": "2024-01-01T00:00:00Z",
+    "updated_at": "2024-01-01T00:00:00Z"
+  }
+]

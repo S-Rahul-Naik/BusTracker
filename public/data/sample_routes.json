@@ -1,0 +1,50 @@
+[
+  {
+    "_id": "route_001",
+    "name": "Downtown Express",
+    "code": "DTE001",
+    "description": "Express route connecting downtown to major destinations",
+    "stops": ["stop_001", "stop_002", "stop_003", "stop_006"],
+    "is_active": true,
+    "distance_km": 15.5,
+    "estimated_duration_minutes": 45,
+    "created_at": "2024-01-01T00:00:00Z",
+    "updated_at": "2024-01-01T00:00:00Z"
+  },
+  {
+    "_id": "route_002",
+    "name": "University Shuttle",
+    "code": "US002",
+    "description": "Frequent service between campus and city center",
+    "stops": ["stop_002", "stop_001", "stop_003"],
+    "is_active": true,
+    "distance_km": 8.2,
+    "estimated_duration_minutes": 25,
+    "created_at": "2024-01-01T00:00:00Z",
+    "updated_at": "2024-01-01T00:00:00Z"
+  },
+  {
+    "_id": "route_003",
+    "name": "Airport Express",
+    "code": "AE003",
+    "description": "Direct service to airport with limited stops",
+    "stops": ["stop_001", "stop_006", "stop_005"],
+    "is_active": true,
+    "distance_km": 22.8,
+    "estimated_duration_minutes": 35,
+    "created_at": "2024-01-01T00:00:00Z",
+    "updated_at": "2024-01-01T00:00:00Z"
+  },
+  {
+    "_id": "route_004",
+    "name": "Medical Center Loop",
+    "code": "MCL004",
+    "description": "Circular route serving medical facilities and surrounding areas",
+    "stops": ["stop_004", "stop_002", "stop_001", "stop_003", "stop_004"],
+    "is_active": true,
+    "distance_km": 18.7,
+    "estimated_duration_minutes": 55,
+    "created_at": "2024-01-01T00:00:00Z",
+    "updated_at": "2024-01-01T00:00:00Z"
+  }
+]

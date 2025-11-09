@@ -6,6 +6,8 @@ interface SearchBarProps {
   searchQuery: string;
   onSearchChange: (query: string) => void;
   busCount: number;
+  hasSearched: boolean;
+  setHasSearched: (val: boolean) => void;
 }
 
 interface BusStop {
@@ -14,7 +16,7 @@ interface BusStop {
   id?: string;
 }
 
-export default function SearchBar({ searchQuery, onSearchChange, busCount }: SearchBarProps) {
+export default function SearchBar({ searchQuery, onSearchChange, busCount, hasSearched, setHasSearched }: SearchBarProps) {
   const [fromStop, setFromStop] = useState<BusStop | null>(null);
   const [toStop, setToStop] = useState<BusStop | null>(null);
   const [showFromDropdown, setShowFromDropdown] = useState(false);
@@ -95,21 +97,21 @@ export default function SearchBar({ searchQuery, onSearchChange, busCount }: Sea
 
   const handleFindBuses = () => {
     if (fromStop && toStop) {
-      // Use the same format as dropdown selection
       onSearchChange(`${fromStop.name} to ${toStop.name}`);
-    } else if (fromStop) {
-      onSearchChange(`from ${fromStop.name}`);
-    } else if (toStop) {
-      onSearchChange(`to ${toStop.name}`);
+      setHasSearched(true);
+    } else {
+      onSearchChange('');
+      setHasSearched(false);
     }
   };
 
   const handleClear = () => {
-    setFromStop(null);
-    setToStop(null);
-    setFromSearch('');
-    setToSearch('');
-    onSearchChange('');
+  setFromStop(null);
+  setToStop(null);
+  setFromSearch('');
+  setToSearch('');
+  onSearchChange('');
+  setHasSearched(false);
   };
 
   return (
@@ -134,21 +136,21 @@ export default function SearchBar({ searchQuery, onSearchChange, busCount }: Sea
               </div>
               <input
                 type="text"
-                value={fromStop ? fromStop.name : fromSearch}
+                value={fromStop ? fromSearch || fromStop.name : fromSearch}
                 onChange={(e) => {
-                  if (!fromStop) {
-                    setFromSearch(e.target.value);
-                    setShowFromDropdown(true);
+                  setFromSearch(e.target.value);
+                  setShowFromDropdown(true);
+                  if (fromStop) {
+                    setFromStop(null);
+                    updateSearchQuery(null, toStop);
                   }
                 }}
                 onFocus={() => {
-                  if (!fromStop) {
-                    setShowFromDropdown(true);
-                  }
+                  setShowFromDropdown(true);
                 }}
                 placeholder="Enter starting point"
                 className="flex-1 px-3 py-3 text-sm border-0 focus:outline-none focus:ring-0"
-                readOnly={!!fromStop}
+                readOnly={false}
               />
               {fromStop && (
                 <button
@@ -169,7 +171,7 @@ export default function SearchBar({ searchQuery, onSearchChange, busCount }: Sea
               <div className="absolute top-full left-0 right-0 mt-1 bg-white border border-gray-200 rounded-lg shadow-lg z-20 max-h-48 overflow-y-auto">
                 {filteredFromStops.map((stop) => (
                   <button
-                    key={stop.code}
+                    key={stop.id ? stop.id : stop.code + stop.name}
                     onClick={() => handleFromSelect(stop)}
                     className="w-full text-left px-4 py-3 hover:bg-gray-50 border-b border-gray-100 last:border-b-0"
                   >
@@ -209,21 +211,21 @@ export default function SearchBar({ searchQuery, onSearchChange, busCount }: Sea
               </div>
               <input
                 type="text"
-                value={toStop ? toStop.name : toSearch}
+                value={toStop ? toSearch || toStop.name : toSearch}
                 onChange={(e) => {
-                  if (!toStop) {
-                    setToSearch(e.target.value);
-                    setShowToDropdown(true);
+                  setToSearch(e.target.value);
+                  setShowToDropdown(true);
+                  if (toStop) {
+                    setToStop(null);
+                    updateSearchQuery(fromStop, null);
                   }
                 }}
                 onFocus={() => {
-                  if (!toStop) {
-                    setShowToDropdown(true);
-                  }
+                  setShowToDropdown(true);
                 }}
                 placeholder="Enter destination"
                 className="flex-1 px-3 py-3 text-sm border-0 focus:outline-none focus:ring-0"
-                readOnly={!!toStop}
+                readOnly={false}
               />
               {toStop && (
                 <button
@@ -244,7 +246,7 @@ export default function SearchBar({ searchQuery, onSearchChange, busCount }: Sea
               <div className="absolute top-full left-0 right-0 mt-1 bg-white border border-gray-200 rounded-lg shadow-lg z-20 max-h-48 overflow-y-auto">
                 {filteredToStops.map((stop) => (
                   <button
-                    key={stop.code}
+                    key={stop.id ? stop.id : stop.code + stop.name}
                     onClick={() => handleToSelect(stop)}
                     className="w-full text-left px-4 py-3 hover:bg-gray-50 border-b border-gray-100 last:border-b-0"
                   >
@@ -264,7 +266,7 @@ export default function SearchBar({ searchQuery, onSearchChange, busCount }: Sea
         {/* Find Buses Button */}
         <button
           onClick={handleFindBuses}
-          disabled={!fromStop && !toStop}
+          disabled={!(fromStop && toStop)}
           className="w-full bg-green-600 text-white py-3 px-4 rounded-lg font-medium hover:bg-green-700 transition-colors disabled:bg-gray-300 disabled:cursor-not-allowed"
         >
           <i className="ri-search-line mr-2"></i>

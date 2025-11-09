@@ -14,6 +14,7 @@ export default function Dashboard() {
   const [selectedRoute, setSelectedRoute] = useState<string | null>(null);
   const [busPositions, setBusPositions] = useState<any[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
+  const [hasSearched, setHasSearched] = useState(false);
   const [filteredBuses, setFilteredBuses] = useState<any[]>([]);
   const [mapFocusRoute, setMapFocusRoute] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
@@ -91,57 +92,34 @@ export default function Dashboard() {
   // Filter buses based on search query
   useEffect(() => {
     if (!searchQuery) {
-      setFilteredBuses(busPositions);
+      setFilteredBuses([]); // Don't show buses until searchQuery is set
     } else {
       let filtered = [];
-      
-      // Handle "from X to Y" format from SearchBar
+      // ...existing code for filtering...
       if (searchQuery.includes(' to ')) {
         const [fromStop, toStop] = searchQuery.split(' to ');
-        
         filtered = busPositions.filter(bus => {
-          // Check if bus has these stops
           const allStops = bus.allStopNames || [...bus.completedStops, bus.nextStop, ...bus.upcomingStops];
-          const hasFromStop = allStops.some((stop: string) => 
-            stop && fromStop && stop.toLowerCase().includes(fromStop.toLowerCase())
-          );
-          const hasToStop = allStops.some((stop: string) => 
-            stop && toStop && stop.toLowerCase().includes(toStop.toLowerCase())
-          );
-          
-          console.log(`Bus ${bus.id}: fromStop=${hasFromStop}, toStop=${hasToStop}, stops=`, allStops);
-          
+          const hasFromStop = allStops.some((stop: string) => stop && fromStop && stop.toLowerCase().includes(fromStop.toLowerCase()));
+          const hasToStop = allStops.some((stop: string) => stop && toStop && stop.toLowerCase().includes(toStop.toLowerCase()));
           return hasFromStop && hasToStop;
         });
-      }
-      // Handle "from X" format
-      else if (searchQuery.startsWith('from ')) {
+      } else if (searchQuery.startsWith('from ')) {
         const stopName = searchQuery.replace('from ', '');
-        
         filtered = busPositions.filter(bus => {
           const allStops = bus.allStopNames || [...bus.completedStops, bus.nextStop, ...bus.upcomingStops];
-          return allStops.some((stop: string) => 
-            stop && stopName && stop.toLowerCase().includes(stopName.toLowerCase())
-          );
+          return allStops.some((stop: string) => stop && stopName && stop.toLowerCase().includes(stopName.toLowerCase()));
         });
-      }
-      // Handle "to X" format
-      else if (searchQuery.startsWith('to ')) {
+      } else if (searchQuery.startsWith('to ')) {
         const stopName = searchQuery.replace('to ', '');
-        
         filtered = busPositions.filter(bus => {
           const allStops = bus.allStopNames || [...bus.completedStops, bus.nextStop, ...bus.upcomingStops];
-          return allStops.some((stop: string) => 
-            stop && stopName && stop.toLowerCase().includes(stopName.toLowerCase())
-          );
+          return allStops.some((stop: string) => stop && stopName && stop.toLowerCase().includes(stopName.toLowerCase()));
         });
-      }
-      // Handle text-based search (existing functionality)
-      else {
+      } else {
         filtered = busPositions.filter(bus => {
           const searchLower = searchQuery.toLowerCase();
           const allStops = bus.allStopNames || [...bus.completedStops, bus.nextStop, ...bus.upcomingStops];
-          
           return (
             bus.id.toLowerCase().includes(searchLower) ||
             bus.routeId.toLowerCase().includes(searchLower) ||
@@ -152,8 +130,6 @@ export default function Dashboard() {
           );
         });
       }
-      
-      console.log(`🔍 Search: "${searchQuery}" → Found ${filtered.length} buses`);
       setFilteredBuses(filtered);
     }
   }, [searchQuery, busPositions]);
@@ -182,11 +158,13 @@ export default function Dashboard() {
             searchQuery={searchQuery}
             onSearchChange={setSearchQuery}
             busCount={filteredBuses.length}
+            hasSearched={hasSearched}
+            setHasSearched={setHasSearched}
           />
         </div>
 
-        {/* Found Buses List */}
-        {searchQuery && filteredBuses.length > 0 && (
+  {/* Found Buses List */}
+  {hasSearched && searchQuery.includes(' to ') && filteredBuses.length > 0 && (
           <div className="mb-6 sm:mb-8">
             <div className="bg-white rounded-xl shadow-lg overflow-hidden">
               <div className="p-4 sm:p-6 border-b bg-gradient-to-r from-green-50 to-blue-50">
@@ -213,54 +191,41 @@ export default function Dashboard() {
                               <p className="text-sm text-gray-600">{bus.routeName || 'Route ' + bus.routeId}</p>
                             </div>
                           </div>
-                          
                           <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mt-3">
                             <div className="flex items-center text-sm">
                               <i className="ri-map-pin-line text-blue-600 mr-2"></i>
                               <span className="text-gray-600">Next Stop:</span>
                               <span className="font-medium text-gray-900 ml-1">{bus.nextStop}</span>
                             </div>
-                            
                             <div className="flex items-center text-sm">
                               <i className="ri-flag-line text-green-600 mr-2"></i>
                               <span className="text-gray-600">Destination:</span>
                               <span className="font-medium text-gray-900 ml-1">{bus.finalDestination}</span>
                             </div>
-                            
                             <div className="flex items-center text-sm">
                               <i className="ri-time-line text-purple-600 mr-2"></i>
                               <span className="text-gray-600">ETA:</span>
                               <span className="font-medium text-gray-900 ml-1">{bus.eta} min</span>
                             </div>
-                            
                             <div className="flex items-center text-sm">
                               <i className="ri-user-line text-orange-600 mr-2"></i>
                               <span className="text-gray-600">Driver:</span>
                               <span className="font-medium text-gray-900 ml-1">{bus.driver || 'N/A'}</span>
                             </div>
                           </div>
-
-                          {/* Route Stops */}
-                          {bus.allStopNames && bus.allStopNames.length > 0 && (
-                            <div className="mt-3 pt-3 border-t">
-                              <p className="text-xs text-gray-500 mb-2">Route Stops:</p>
-                              <div className="flex flex-wrap gap-2">
-                                {bus.allStopNames.map((stop: any, idx: number) => {
-                                  const stopName = typeof stop === 'string' ? stop : (stop?.name || String(stop));
-                                  return (
-                                    <span 
-                                      key={idx}
-                                      className="px-2 py-1 bg-gray-100 text-gray-700 rounded text-xs"
-                                    >
-                                      {stopName}
-                                    </span>
-                                  );
-                                })}
-                              </div>
-                            </div>
-                          )}
+                          {/* Route Name Button */}
+                          <div className="mt-3 pt-3 border-t">
+                            <button
+                              className="px-4 py-2 bg-blue-100 text-blue-700 rounded font-semibold hover:bg-blue-200 transition-colors"
+                              onClick={() => {
+                                setSelectedRoute(bus.routeId);
+                                handleRouteMapView(bus.routeId);
+                              }}
+                            >
+                              {bus.routeName || 'Route ' + bus.routeId}
+                            </button>
+                          </div>
                         </div>
-
                         <div className="ml-4">
                           <div className={`px-3 py-1 rounded-full text-xs font-medium ${
                             bus.status === 'on-time' ? 'bg-green-100 text-green-700' :
@@ -279,8 +244,8 @@ export default function Dashboard() {
           </div>
         )}
 
-        {/* No Results Message */}
-        {searchQuery && filteredBuses.length === 0 && (
+  {/* No Results Message */}
+  {hasSearched && searchQuery.includes(' to ') && filteredBuses.length === 0 && (
           <div className="mb-6 sm:mb-8">
             <div className="bg-white rounded-xl shadow-lg p-8 text-center">
               <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
@@ -293,6 +258,7 @@ export default function Dashboard() {
         )}
 
         {/* Bus Routes Section - Full Width */}
+        {/**
         <div className="mb-6 sm:mb-8">
           <RouteSelector 
             selectedRoute={selectedRoute}
@@ -300,6 +266,7 @@ export default function Dashboard() {
             onRouteMapView={handleRouteMapView}
           />
         </div>
+        */}
 
         {/* Main Map Area - Full Width */}
         <div className="mb-6 sm:mb-8" data-map-container>

@@ -1,0 +1,12 @@
+{
+  "expo": {
+    "extra": {
+      "eas": {
+        "projectId": "cf9c12cc-ddea-4542-845d-a9a3835eec4c"
+      }
+    },
+    "android": {
+      "package": "com.bustracker.busnotify"
+    }
+  }
+}

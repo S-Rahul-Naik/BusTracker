@@ -4,9 +4,11 @@ Run this to create drivers for Bus 1, Bus 3, Bus 4, etc.
 """
 import asyncio
 from motor.motor_asyncio import AsyncIOMotorClient
-from passlib.context import CryptContext
+import bcrypt
 
-pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
+def hash_password(password: str) -> str:
+    """Hash a password using bcrypt directly"""
+    return bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
 
 async def create_multiple_drivers():
     # Connect to MongoDB
@@ -59,7 +61,7 @@ async def create_multiple_drivers():
         # Create/update user
         user_data = {
             "email": driver_data["email"],
-            "password": pwd_context.hash(driver_data["password"]),
+            "password": hash_password(driver_data["password"]),
             "name": driver_data["name"],
             "phone": driver_data["phone"],
             "role": "driver"

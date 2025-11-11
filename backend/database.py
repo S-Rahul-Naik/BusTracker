@@ -15,12 +15,21 @@ class MongoDB:
     @classmethod
     async def connect_db(cls):
         """Connect to MongoDB"""
-        # Add SSL/TLS parameters for MongoDB Atlas
+        # For MongoDB Atlas, use the connection string with SSL parameters
+        # Add retryWrites and w parameters for better Atlas compatibility
+        connection_url = MONGODB_URL
+        if "mongodb+srv://" in MONGODB_URL and "?" in MONGODB_URL:
+            # Already has parameters, add more
+            connection_url = f"{MONGODB_URL}&retryWrites=true&w=majority&tls=true"
+        elif "mongodb+srv://" in MONGODB_URL:
+            # No parameters yet
+            connection_url = f"{MONGODB_URL}?retryWrites=true&w=majority&tls=true"
+        
         cls.client = AsyncIOMotorClient(
-            MONGODB_URL,
-            tls=True,
-            tlsAllowInvalidCertificates=True,
-            serverSelectionTimeoutMS=5000
+            connection_url,
+            serverSelectionTimeoutMS=10000,
+            connectTimeoutMS=10000,
+            socketTimeoutMS=10000
         )
         print(f"✅ Connected to MongoDB at {MONGODB_URL}")
     

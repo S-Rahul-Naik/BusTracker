@@ -18,7 +18,9 @@
       "supportsTablet": true,
       "bundleIdentifier": "com.busnotify.drivers",
       "infoPlist": {
-        "UIBackgroundModes": ["location"],
+        "UIBackgroundModes": [
+          "location"
+        ],
         "NSLocationAlwaysAndWhenInUseUsageDescription": "BusNotify needs your location to track the bus in real-time for students.",
         "NSLocationWhenInUseUsageDescription": "BusNotify needs your location to track the bus route.",
         "NSLocationAlwaysUsageDescription": "BusNotify needs background location to track the bus even when the app is closed."
@@ -35,7 +37,12 @@
         "ACCESS_COARSE_LOCATION",
         "ACCESS_BACKGROUND_LOCATION",
         "FOREGROUND_SERVICE",
-        "FOREGROUND_SERVICE_LOCATION"
+        "FOREGROUND_SERVICE_LOCATION",
+        "android.permission.ACCESS_COARSE_LOCATION",
+        "android.permission.ACCESS_FINE_LOCATION",
+        "android.permission.ACCESS_BACKGROUND_LOCATION",
+        "android.permission.FOREGROUND_SERVICE",
+        "android.permission.FOREGROUND_SERVICE_LOCATION"
       ]
     },
     "web": {
@@ -52,6 +59,11 @@
           "isAndroidForegroundServiceEnabled": true
         }
       ]
-    ]
+    ],
+    "extra": {
+      "eas": {
+        "projectId": "15633bea-5b46-46e2-a9c2-c7705aed6a7f"
+      }
+    }
   }
 }

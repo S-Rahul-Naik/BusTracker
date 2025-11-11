@@ -75,12 +75,13 @@ export default function DashboardScreen({ navigation }: DashboardScreenProps) {
   const updateCurrentLocation = async () => {
     const location = await locationService.getCurrentLocation();
     if (location) {
+      const accuracy = location.coords.accuracy ?? 0;
       setCurrentLocation({
         latitude: location.coords.latitude,
         longitude: location.coords.longitude,
-        accuracy: location.coords.accuracy,
+        accuracy: accuracy,
       });
-      setGpsAccuracy(location.coords.accuracy);
+      setGpsAccuracy(accuracy);
     }
   };
 

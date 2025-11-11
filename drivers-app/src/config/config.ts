@@ -1,7 +1,7 @@
 // API Configuration
 export const API_CONFIG = {
-  // Change this to your laptop IP or deployed backend URL
-  BASE_URL: 'http://192.168.1.100:8000', // Replace with your laptop IP
+  // Updated to current laptop IP address
+  BASE_URL: 'http://172.16.4.151:8000', // Current laptop IP on WiFi
   ENDPOINTS: {
     DRIVER_LOGIN: '/api/driver/login',
     UPDATE_LOCATION: '/api/driver/update-location',

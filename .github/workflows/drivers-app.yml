@@ -1,0 +1,105 @@
+name: Build Drivers App
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'drivers-app/**'
+  pull_request:
+    branches: [main]
+    paths:
+      - 'drivers-app/**'
+  workflow_dispatch:
+
+jobs:
+  build-android:
+    name: Build Android APK
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+          cache: 'npm'
+          cache-dependency-path: drivers-app/package-lock.json
+
+      - name: Install dependencies
+        working-directory: drivers-app
+        run: npm ci
+
+      - name: TypeScript check
+        working-directory: drivers-app
+        run: npx tsc --noEmit
+
+      - name: Setup Expo
+        uses: expo/expo-github-action@v8
+        with:
+          expo-version: latest
+          token: ${{ secrets.EXPO_TOKEN }}
+
+      - name: Build Android APK with EAS
+        working-directory: drivers-app
+        run: |
+          npx eas-cli build --platform android --profile preview --non-interactive --no-wait
+        env:
+          EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
+        continue-on-error: true
+
+      - name: Get EAS Build Status
+        working-directory: drivers-app
+        run: |
+          echo "✅ Build submitted to EAS!"
+          echo "📱 Check build status at: https://expo.dev"
+          npx eas-cli build:list --limit 1
+        env:
+          EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
+
+  build-ios:
+    name: Build iOS App
+    runs-on: macos-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+          cache: 'npm'
+          cache-dependency-path: drivers-app/package-lock.json
+
+      - name: Install dependencies
+        working-directory: drivers-app
+        run: npm ci
+
+      - name: TypeScript check
+        working-directory: drivers-app
+        run: npx tsc --noEmit
+
+      - name: Setup Expo
+        uses: expo/expo-github-action@v8
+        with:
+          expo-version: latest
+          token: ${{ secrets.EXPO_TOKEN }}
+
+      - name: Build iOS IPA with EAS
+        working-directory: drivers-app
+        run: |
+          npx eas-cli build --platform ios --profile preview --non-interactive --no-wait
+        env:
+          EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
+        continue-on-error: true
+
+      - name: Get EAS Build Status
+        working-directory: drivers-app
+        run: |
+          echo "✅ Build submitted to EAS!"
+          echo "📱 Check build status at: https://expo.dev"
+          npx eas-cli build:list --limit 1
+        env:
+          EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}

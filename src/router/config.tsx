@@ -12,6 +12,7 @@ import SignUpPage from "../pages/auth/SignUpPage";
 import UnifiedLoginPage from "../pages/auth/UnifiedLoginPage";
 import Phase4Dashboard from "../pages/phase4/page";
 import LoginPage from "../pages/auth/LoginPage";
+import DriverAppRedirect from "../pages/driver/DriverAppRedirect";
 import { AdminRoute, UserRoute, AuthenticatedRoute } from "../components/auth/ProtectedRoute";
 
 const routes: RouteObject[] = [
@@ -95,6 +96,15 @@ const routes: RouteObject[] = [
   {
     path: "/phase4",
     element: <Phase4Dashboard />,
+  },
+  // Driver routes - Redirect to native app info page
+  {
+    path: "/driver/login",
+    element: <DriverAppRedirect />,
+  },
+  {
+    path: "/driver/dashboard",
+    element: <DriverAppRedirect />,
   },
   {
     path: "*",

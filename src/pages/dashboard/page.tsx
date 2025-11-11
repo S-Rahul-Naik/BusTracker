@@ -11,19 +11,20 @@ import apiClient from '../../lib/api';
 
 export default function Dashboard() {
   const navigate = useNavigate();
+  // const navigate = useNavigate(); // Removed unused variable
   const [selectedRoute, setSelectedRoute] = useState<string | null>(null);
   const [busPositions, setBusPositions] = useState<any[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [hasSearched, setHasSearched] = useState(false);
   const [filteredBuses, setFilteredBuses] = useState<any[]>([]);
   const [mapFocusRoute, setMapFocusRoute] = useState<string | null>(null);
-  const [loading, setLoading] = useState(true);
+  // const [loading, setLoading] = useState(true); // Removed unused variable
 
   useEffect(() => {
     // Fetch real bus positions from API
     const fetchBuses = async () => {
       try {
-        setLoading(true);
+  // setLoading(true); // Removed unused reference
         const buses = await apiClient.getBuses();
         const routes = await apiClient.getRoutes();
         
@@ -54,18 +55,22 @@ export default function Dashboard() {
                   lat: bus.current_location.latitude || bus.current_location.lat || 0, 
                   lng: bus.current_location.longitude || bus.current_location.lng || 0
                 }
-              : (routeStops[0] ? { lat: routeStops[0].lat, lng: routeStops[0].lng } : { lat: 0, lng: 0 }),
-            eta: bus.eta_minutes || Math.floor(Math.random() * 15) + 5,
-            status: bus.status || 'on-time',
-            nextStop: bus.next_stop || stopNames[1] || firstStop,
-            delay: bus.delay_minutes || 0,
-            direction: bus.direction || 'Forward',
-            finalDestination: bus.final_destination || lastStop,
-            completedStops: bus.completed_stops || (stopNames.length > 0 ? [firstStop] : []),
-            upcomingStops: bus.upcoming_stops || stopNames.slice(1),
+              : (
+                  routeStops[0] && typeof routeStops[0] === 'object' && 'lat' in routeStops[0] && 'lng' in routeStops[0]
+                    ? { lat: (routeStops[0] as { lat: number; lng: number }).lat, lng: (routeStops[0] as { lat: number; lng: number }).lng }
+                    : { lat: 0, lng: 0 }
+                ),
+            eta: bus.eta_minutes,
+            status: bus.status,
+            nextStop: bus.next_stop,
+            delay: bus.delay_minutes,
+            direction: bus.direction,
+            finalDestination: bus.final_destination,
+            completedStops: bus.completed_stops,
+            upcomingStops: bus.upcoming_stops,
             driver: bus.driver_name,
             capacity: bus.capacity,
-            occupancy: bus.current_occupancy || Math.floor(Math.random() * (bus.capacity || 50)),
+            occupancy: bus.current_occupancy,
             // Add all stop names for search
             allStopNames: stopNames
           };
@@ -77,7 +82,7 @@ export default function Dashboard() {
         console.error('Error fetching buses:', error);
         toast.error('Failed to load bus data');
       } finally {
-        setLoading(false);
+  // setLoading(false); // Removed unused reference
       }
     };
 
@@ -213,17 +218,42 @@ export default function Dashboard() {
                               <span className="font-medium text-gray-900 ml-1">{bus.driver || 'N/A'}</span>
                             </div>
                           </div>
-                          {/* Route Name Button */}
+                          {/* Action Buttons */}
                           <div className="mt-3 pt-3 border-t">
-                            <button
-                              className="px-4 py-2 bg-blue-100 text-blue-700 rounded font-semibold hover:bg-blue-200 transition-colors"
-                              onClick={() => {
-                                setSelectedRoute(bus.routeId);
-                                handleRouteMapView(bus.routeId);
-                              }}
-                            >
-                              {bus.routeName || 'Route ' + bus.routeId}
-                            </button>
+                            <div className="flex flex-wrap gap-2">
+                              <button
+                                className="px-4 py-2 bg-blue-100 text-blue-700 rounded-lg font-semibold hover:bg-blue-200 transition-colors flex items-center gap-2"
+                                onClick={() => {
+                                  setSelectedRoute(bus.routeId);
+                                  handleRouteMapView(bus.routeId);
+                                }}
+                              >
+                                <i className="ri-route-line"></i>
+                                {bus.routeName || 'Route ' + bus.routeId}
+                              </button>
+                              <button
+                                className="px-4 py-2 bg-green-100 text-green-700 rounded-lg font-semibold hover:bg-green-200 transition-colors flex items-center gap-2"
+                                onClick={() => {
+                                  // Navigate to live-tracking page with route pre-selected
+                                  navigate('/live-tracking', { state: { selectedRoute: bus.routeId } });
+                                }}
+                              >
+                                <i className="ri-map-pin-user-line"></i>
+                                Live Tracking
+                              </button>
+                              <button
+                                className="px-4 py-2 bg-purple-100 text-purple-700 rounded-lg font-semibold hover:bg-purple-200 transition-colors flex items-center gap-2"
+                                onClick={() => {
+                                  // Scroll to timeline section
+                                  const timeline = document.querySelector('[data-timeline-container]');
+                                  timeline?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                                  setSelectedRoute(bus.routeId);
+                                }}
+                              >
+                                <i className="ri-time-line"></i>
+                                Timeline
+                              </button>
+                            </div>
                           </div>
                         </div>
                         <div className="ml-4">
@@ -258,7 +288,6 @@ export default function Dashboard() {
         )}
 
         {/* Bus Routes Section - Full Width */}
-        {/**
         <div className="mb-6 sm:mb-8">
           <RouteSelector 
             selectedRoute={selectedRoute}
@@ -266,7 +295,6 @@ export default function Dashboard() {
             onRouteMapView={handleRouteMapView}
           />
         </div>
-        */}
 
         {/* Main Map Area - Full Width */}
         <div className="mb-6 sm:mb-8" data-map-container>
@@ -285,7 +313,7 @@ export default function Dashboard() {
         </div>
 
         {/* Timeline Section - Full Width */}
-        <div className="mb-6 sm:mb-8">
+        <div className="mb-6 sm:mb-8" data-timeline-container>
           <BusTimeline selectedRoute={selectedRoute} />
         </div>
 

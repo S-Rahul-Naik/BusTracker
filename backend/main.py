@@ -57,6 +57,20 @@ class GlobalSchedule(BaseModel):
 class TodaySchedule(BaseModel):
     scheduleType: str = "regular"  # regular, halfday, exam, holiday
 
+class DriverLocationUpdate(BaseModel):
+    bus_id: str
+    latitude: float
+    longitude: float
+    timestamp: Optional[datetime] = None
+
+class DriverLogin(BaseModel):
+    email: EmailStr
+    password: str
+
+class StartTrip(BaseModel):
+    bus_id: str
+    route_id: str
+
 # App setup
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -549,6 +563,152 @@ async def delete_bus(bus_id: str, current_user: dict = Depends(get_admin_user)):
         raise HTTPException(status_code=404, detail="Bus not found")
     
     return {"message": "Bus deleted successfully"}
+
+# ============================================
+# DRIVER GPS TRACKING ENDPOINTS
+# ============================================
+
+@app.post("/api/driver/login")
+async def driver_login(credentials: DriverLogin):
+    """Driver login endpoint"""
+    database = db.get_db()
+    
+    # Find driver by email
+    driver = await database.users.find_one({"email": credentials.email, "role": "driver"})
+    
+    if not driver or not verify_password(credentials.password, driver["password"]):
+        raise HTTPException(status_code=401, detail="Invalid credentials")
+    
+    # Create access token
+    token = create_access_token({"email": driver["email"], "role": "driver"})
+    
+    # Get assigned bus info
+    bus = await database.buses.find_one({"driver_email": credentials.email})
+    
+    return {
+        "token": token,
+        "driver": {
+            "name": driver["name"],
+            "email": driver["email"],
+            "phone": driver.get("phone"),
+            "bus_id": bus.get("bus_number") if bus else None,
+            "route_id": bus.get("route_id") if bus else None
+        }
+    }
+
+@app.post("/api/driver/update-location")
+async def update_driver_location(location: DriverLocationUpdate, authorization: str = Header(None)):
+    """Update bus location from driver's phone GPS"""
+    if not authorization:
+        raise HTTPException(status_code=401, detail="Authorization required")
+    
+    try:
+        token = authorization.replace("Bearer ", "")
+        payload = verify_token(token)
+        if payload.get("role") != "driver":
+            raise HTTPException(status_code=403, detail="Driver access only")
+    except Exception as e:
+        raise HTTPException(status_code=401, detail="Invalid token")
+    
+    database = db.get_db()
+    
+    # Update bus current location
+    update_data = {
+        "current_location": {
+            "latitude": location.latitude,
+            "longitude": location.longitude,
+            "updated_at": location.timestamp or datetime.utcnow()
+        },
+        "last_updated": datetime.utcnow()
+    }
+    
+    result = await database.buses.update_one(
+        {"bus_number": location.bus_id},
+        {"$set": update_data}
+    )
+    
+    if result.matched_count == 0:
+        raise HTTPException(status_code=404, detail="Bus not found")
+    
+    return {
+        "success": True,
+        "message": "Location updated successfully",
+        "location": {
+            "latitude": location.latitude,
+            "longitude": location.longitude,
+            "timestamp": location.timestamp or datetime.utcnow()
+        }
+    }
+
+@app.post("/api/driver/start-trip")
+async def start_trip(trip_data: StartTrip, authorization: str = Header(None)):
+    """Driver starts a trip"""
+    if not authorization:
+        raise HTTPException(status_code=401, detail="Authorization required")
+    
+    try:
+        token = authorization.replace("Bearer ", "")
+        payload = verify_token(token)
+        if payload.get("role") != "driver":
+            raise HTTPException(status_code=403, detail="Driver access only")
+    except Exception as e:
+        raise HTTPException(status_code=401, detail="Invalid token")
+    
+    database = db.get_db()
+    
+    # Update bus status to active
+    result = await database.buses.update_one(
+        {"bus_number": trip_data.bus_id},
+        {
+            "$set": {
+                "status": "on-time",
+                "trip_active": True,
+                "trip_started_at": datetime.utcnow(),
+                "route_id": trip_data.route_id
+            }
+        }
+    )
+    
+    if result.matched_count == 0:
+        raise HTTPException(status_code=404, detail="Bus not found")
+    
+    return {"success": True, "message": "Trip started successfully"}
+
+@app.post("/api/driver/end-trip")
+async def end_trip(bus_id: str, authorization: str = Header(None)):
+    """Driver ends a trip"""
+    if not authorization:
+        raise HTTPException(status_code=401, detail="Authorization required")
+    
+    try:
+        token = authorization.replace("Bearer ", "")
+        payload = verify_token(token)
+        if payload.get("role") != "driver":
+            raise HTTPException(status_code=403, detail="Driver access only")
+    except Exception as e:
+        raise HTTPException(status_code=401, detail="Invalid token")
+    
+    database = db.get_db()
+    
+    # Update bus status to inactive
+    result = await database.buses.update_one(
+        {"bus_number": bus_id},
+        {
+            "$set": {
+                "trip_active": False,
+                "trip_ended_at": datetime.utcnow()
+            }
+        }
+    )
+    
+    if result.matched_count == 0:
+        raise HTTPException(status_code=404, detail="Bus not found")
+    
+    return {"success": True, "message": "Trip ended successfully"}
+
+# ============================================
+# END DRIVER GPS TRACKING ENDPOINTS
+# ============================================
 
 if __name__ == "__main__":
     print("=" * 70)

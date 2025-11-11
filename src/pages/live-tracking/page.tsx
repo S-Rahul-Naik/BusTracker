@@ -31,10 +31,53 @@ export default function LiveTracking() {
   const [currentStopIndex, setCurrentStopIndex] = useState<number>(0);
   const [estimatedPassengers, setEstimatedPassengers] = useState<number>(0);
   const [routeCoordinates, setRouteCoordinates] = useState<L.LatLng[]>([]);
+  const [realBusLocation, setRealBusLocation] = useState<{lat: number, lng: number} | null>(null);
+  const [activeBuses, setActiveBuses] = useState<any[]>([]);
 
   useEffect(() => {
     loadRoutes();
+    loadActiveBuses(); // Load real bus locations
   }, []);
+
+  // Poll for real-time bus locations every 5 seconds
+  useEffect(() => {
+    if (!selectedRoute) return;
+    
+    const interval = setInterval(() => {
+      loadActiveBuses();
+    }, 5000); // Update every 5 seconds
+
+    return () => clearInterval(interval);
+  }, [selectedRoute]);
+
+  const loadActiveBuses = async () => {
+    try {
+      const buses = await apiClient.getBuses();
+      setActiveBuses(buses);
+      
+      // Find buses on the selected route
+      const routeBuses = buses.filter((bus: any) => bus.route_id === selectedRoute);
+      
+      if (routeBuses.length > 0) {
+        const bus = routeBuses[0]; // Get first bus on this route
+        
+        // Update real bus location from API
+        if (bus.current_location) {
+          setRealBusLocation({
+            lat: bus.current_location.latitude || bus.current_location.lat,
+            lng: bus.current_location.longitude || bus.current_location.lng
+          });
+        }
+        
+        // Update passenger count from real data
+        if (bus.current_occupancy) {
+          setEstimatedPassengers(bus.current_occupancy);
+        }
+      }
+    } catch (error) {
+      console.error('Failed to load active buses:', error);
+    }
+  };
 
   useEffect(() => {
     if (routes.length > 0 && selectedRoute) {
@@ -214,44 +257,58 @@ export default function LiveTracking() {
     }
   };
 
-  // Update bus position on map based on actual route coordinates
+  // Update bus position on map based on REAL GPS coordinates from API
   useEffect(() => {
-    if (!busMarkerRef.current || routeCoordinates.length === 0) return;
+    if (!busMarkerRef.current || !realBusLocation) return;
 
     const currentRoute = routes.find(r => r.id === selectedRoute);
     if (!currentRoute || !currentRoute.stops || currentRoute.stops.length < 2) return;
 
-    // Calculate position along the actual route coordinates
-    const totalPoints = routeCoordinates.length;
-    const currentIndex = Math.floor((busPosition / 100) * (totalPoints - 1));
+    // Update bus marker to real GPS location
+    busMarkerRef.current.setLatLng([realBusLocation.lat, realBusLocation.lng]);
     
-    if (currentIndex < totalPoints) {
-      const currentCoord = routeCoordinates[currentIndex];
-      busMarkerRef.current.setLatLng(currentCoord);
-      
-      // Find which stops we're between
-      const totalStops = currentRoute.stops.length;
-      const segmentLength = 100 / (totalStops - 1);
-      const currentSegment = Math.floor(busPosition / segmentLength);
-      const segmentProgress = (busPosition % segmentLength) / segmentLength;
-      
-      // Update current stop index
-      setCurrentStopIndex(Math.min(currentSegment, totalStops - 1));
-      
-      // Get next stop info
-      const nextStopIndex = Math.min(currentSegment + 1, totalStops - 1);
-      const nextStop = currentRoute.stops[nextStopIndex];
-      
-      // Update popup
-      busMarkerRef.current.bindPopup(`
-        <div style="text-align: center;">
-          <strong>🚌 Bus Live Location</strong><br/>
-          <small>Heading to ${nextStop.name}</small><br/>
-          <small>${Math.round((1 - segmentProgress) * 100)}% to next stop</small>
-        </div>
-      `);
+    // Pan map to follow bus
+    if (mapRef.current) {
+      mapRef.current.panTo([realBusLocation.lat, realBusLocation.lng]);
     }
-  }, [busPosition, selectedRoute, routes, routeCoordinates]);
+    
+    // Find nearest stop to determine current progress
+    let nearestStopIndex = 0;
+    let minDistance = Infinity;
+    
+    currentRoute.stops.forEach((stop: any, index: number) => {
+      const stopLat = stop.latitude || stop.lat;
+      const stopLng = stop.longitude || stop.lng;
+      const distance = Math.sqrt(
+        Math.pow(realBusLocation.lat - stopLat, 2) + 
+        Math.pow(realBusLocation.lng - stopLng, 2)
+      );
+      if (distance < minDistance) {
+        minDistance = distance;
+        nearestStopIndex = index;
+      }
+    });
+    
+    setCurrentStopIndex(nearestStopIndex);
+    
+    // Calculate progress percentage
+    const progress = (nearestStopIndex / (currentRoute.stops.length - 1)) * 100;
+    setBusPosition(progress);
+    
+    // Get next stop info
+    const nextStopIndex = Math.min(nearestStopIndex + 1, currentRoute.stops.length - 1);
+    const nextStop = currentRoute.stops[nextStopIndex];
+    
+    // Update popup with real location
+    busMarkerRef.current.bindPopup(`
+      <div style="text-align: center;">
+        <strong>🚌 Bus Live Location</strong><br/>
+        <small>Current: ${currentRoute.stops[nearestStopIndex].name}</small><br/>
+        <small>Next: ${nextStop.name}</small><br/>
+        <small>GPS: ${realBusLocation.lat.toFixed(6)}, ${realBusLocation.lng.toFixed(6)}</small>
+      </div>
+    `);
+  }, [realBusLocation, selectedRoute, routes]);
 
   const currentRoute = routes.find(r => r.id === selectedRoute);
   const nextStop = currentRoute?.stops?.[Math.min(currentStopIndex + 1, currentRoute.stops.length - 1)];

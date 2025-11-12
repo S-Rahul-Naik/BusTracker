@@ -1,5 +1,5 @@
-# Use Python 3.11 explicitly
-FROM python:3.11.9-slim
+# Use Python 3.10 for better SSL/TLS compatibility with MongoDB Atlas M0 free tier
+FROM python:3.10.15-slim
 
 WORKDIR /app
 

@@ -15,17 +15,14 @@ class MongoDB:
     @classmethod
     async def connect_db(cls):
         """Connect to MongoDB"""
-        # For MongoDB Atlas M0 free tier, we need to disable SSL verification
-        # due to Python 3.11 SSL library compatibility issues
-        import ssl
-        
+        # For MongoDB Atlas M0 free tier with Python 3.11
+        # Use tlsAllowInvalidCertificates to bypass SSL verification issues
         cls.client = AsyncIOMotorClient(
             MONGODB_URL,
             serverSelectionTimeoutMS=30000,
             connectTimeoutMS=30000,
             socketTimeoutMS=30000,
-            tlsAllowInvalidCertificates=True,  # Required for M0 tier
-            ssl_cert_reqs=ssl.CERT_NONE  # Disable certificate verification
+            tlsAllowInvalidCertificates=True
         )
         print(f"✅ Connected to MongoDB at {MONGODB_URL}")
     

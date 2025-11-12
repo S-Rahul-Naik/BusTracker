@@ -3,9 +3,9 @@ fastapi==0.104.1
 uvicorn[standard]==0.24.0
 python-multipart==0.0.6
 
-# Database
-pymongo==4.9.1
-motor==3.6.0
+# Database - Downgraded for better SSL/TLS compatibility with MongoDB Atlas M0
+pymongo==4.6.3
+motor==3.4.0
 
 # Real-time Communication
 python-socketio==5.10.0

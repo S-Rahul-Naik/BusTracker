@@ -1,9 +1,0 @@
-services:
-  - type: web
-    name: bustracker-backend
-    runtime: docker
-    plan: free
-    region: singapore
-    rootDir: backend
-    dockerfilePath: ./Dockerfile
-    dockerContext: ./

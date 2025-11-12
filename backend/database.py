@@ -15,21 +15,17 @@ class MongoDB:
     @classmethod
     async def connect_db(cls):
         """Connect to MongoDB"""
-        # For MongoDB Atlas, use the connection string with SSL parameters
-        # Add retryWrites and w parameters for better Atlas compatibility
-        connection_url = MONGODB_URL
-        if "mongodb+srv://" in MONGODB_URL and "?" in MONGODB_URL:
-            # Already has parameters, add more
-            connection_url = f"{MONGODB_URL}&retryWrites=true&w=majority&tls=true"
-        elif "mongodb+srv://" in MONGODB_URL:
-            # No parameters yet
-            connection_url = f"{MONGODB_URL}?retryWrites=true&w=majority&tls=true"
+        # For MongoDB Atlas M0 free tier, we need to disable SSL verification
+        # due to Python 3.11 SSL library compatibility issues
+        import ssl
         
         cls.client = AsyncIOMotorClient(
-            connection_url,
-            serverSelectionTimeoutMS=10000,
-            connectTimeoutMS=10000,
-            socketTimeoutMS=10000
+            MONGODB_URL,
+            serverSelectionTimeoutMS=30000,
+            connectTimeoutMS=30000,
+            socketTimeoutMS=30000,
+            tlsAllowInvalidCertificates=True,  # Required for M0 tier
+            ssl_cert_reqs=ssl.CERT_NONE  # Disable certificate verification
         )
         print(f"✅ Connected to MongoDB at {MONGODB_URL}")
     

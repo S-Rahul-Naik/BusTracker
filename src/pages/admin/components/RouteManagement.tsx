@@ -269,6 +269,21 @@ export default function RouteManagement() {
     setShowMapEditor(false);
   };
 
+  const handleDeleteRoute = async (routeId: string, routeName: string) => {
+    if (!confirm(`Are you sure you want to delete route "${routeName}"? This action cannot be undone.`)) {
+      return;
+    }
+
+    try {
+      await apiClient.deleteRoute(routeId);
+      toast.success('Route deleted successfully');
+      loadRoutes();
+    } catch (error) {
+      console.error('Failed to delete route:', error);
+      toast.error('Failed to delete route');
+    }
+  };
+
   const handleEditRoute = (route: any) => {
     setEditingRouteId(route.id);
     setNewRoute({
@@ -1108,6 +1123,14 @@ export default function RouteManagement() {
                     >
                       <i className="ri-edit-line mr-1"></i>
                       Edit
+                    </button>
+                    <button 
+                      onClick={() => handleDeleteRoute(route.id, route.name)}
+                      className="text-red-600 hover:text-red-900 bg-red-50 px-3 py-1 rounded-lg hover:bg-red-100 transition-colors"
+                      title="Delete Route"
+                    >
+                      <i className="ri-delete-bin-line mr-1"></i>
+                      Delete
                     </button>
                   </td>
                 </tr>

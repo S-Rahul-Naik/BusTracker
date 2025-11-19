@@ -66,6 +66,7 @@ class DriverLocationUpdate(BaseModel):
 class DriverLogin(BaseModel):
     email: EmailStr
     password: str
+    bus_number: Optional[str] = None  # Bus number for validation
 
 class StartTrip(BaseModel):
     bus_id: str
@@ -359,6 +360,45 @@ async def create_route(route: RouteCreate, current_user: dict = Depends(get_admi
     route_data.pop("_id", None)
     return route_data
 
+@app.put("/api/admin/routes/{route_id}")
+async def update_route(route_id: str, route_data: dict, current_user: dict = Depends(get_admin_user)):
+    """Update a route (admin only)"""
+    database = db.get_db()
+    
+    # Add update timestamp
+    route_data["updated_at"] = datetime.utcnow()
+    route_data["updated_by"] = current_user.get("email")
+    
+    # Update in database
+    result = await database.routes.update_one(
+        {"id": route_id},
+        {"$set": route_data}
+    )
+    
+    if result.matched_count == 0:
+        raise HTTPException(status_code=404, detail="Route not found")
+    
+    # Get updated route
+    updated_route = await database.routes.find_one({"id": route_id})
+    if updated_route:
+        updated_route.pop("_id", None)
+        return updated_route
+    
+    return {"message": "Route updated successfully"}
+
+@app.delete("/api/admin/routes/{route_id}")
+async def delete_route(route_id: str, current_user: dict = Depends(get_admin_user)):
+    """Delete a route (admin only)"""
+    database = db.get_db()
+    
+    # Delete from database
+    result = await database.routes.delete_one({"id": route_id})
+    
+    if result.deleted_count == 0:
+        raise HTTPException(status_code=404, detail="Route not found")
+    
+    return {"message": "Route deleted successfully"}
+
 @app.get("/api/buses")
 async def get_buses():
     database = db.get_db()
@@ -573,17 +613,36 @@ async def driver_login(credentials: DriverLogin):
     """Driver login endpoint"""
     database = db.get_db()
     
+    print(f"🔍 Login attempt: email={credentials.email}, bus={credentials.bus_number}")
+    
     # Find driver by email
     driver = await database.users.find_one({"email": credentials.email, "role": "driver"})
     
-    if not driver or not verify_password(credentials.password, driver["password"]):
+    if not driver:
+        print(f"❌ Driver not found: {credentials.email}")
         raise HTTPException(status_code=401, detail="Invalid credentials")
     
-    # Create access token
-    token = create_access_token({"email": driver["email"], "role": "driver"})
+    print(f"✅ Found driver: {driver['name']}")
+    
+    password_valid = verify_password(credentials.password, driver["password"])
+    print(f"🔐 Password valid: {password_valid}")
+    
+    if not password_valid:
+        print(f"❌ Invalid password for {credentials.email}")
+        raise HTTPException(status_code=401, detail="Invalid credentials")
     
     # Get assigned bus info
     bus = await database.buses.find_one({"driver_email": credentials.email})
+    
+    # If bus number is provided, validate it matches the assigned bus
+    if credentials.bus_number:
+        if not bus:
+            raise HTTPException(status_code=403, detail="No bus assigned to this driver")
+        if str(bus.get("bus_number")) != str(credentials.bus_number):
+            raise HTTPException(status_code=403, detail=f"You are not assigned to Bus {credentials.bus_number}. Your assigned bus is Bus {bus.get('bus_number')}")
+    
+    # Create access token
+    token = create_access_token({"email": driver["email"], "role": "driver"})
     
     return {
         "token": token,

@@ -42,7 +42,7 @@ export default function BusManagement() {
 
   const loadBuses = async () => {
     try {
-      const data = await apiClient.getBuses();
+      const data = await apiClient.getAdminBuses();
       // Map backend response to frontend format
       const mappedBuses = data.map((bus: any) => ({
         id: bus.id,
